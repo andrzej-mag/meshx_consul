@@ -61,8 +61,6 @@ defmodule MeshxConsul.Proxy.Worker do
 
   @impl true
   def handle_cast(:cleanup, %__MODULE__{} = state) do
-    fn test -> Logger.info("ssss#{test}") end
-
     :ok = stop_proxy(state)
     {:noreply, state}
   end
