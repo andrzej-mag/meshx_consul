@@ -10,17 +10,13 @@ defmodule MeshxConsul.Service.Endpoint do
   iex(1)> MeshxConsul.Service.Endpoint.put("/kv/my-key", "my-key_value")
   :ok
   iex(2)> MeshxConsul.Service.Endpoint.get("/kv/my-key", %{raw: true})
-  'my-key_value'
+  {:ok, 'my-key_value'}
   iex(3)> MeshxConsul.Service.Endpoint.delete("/kv/my-key")
   :ok
   iex(4)> MeshxConsul.Service.Endpoint.get("/kv/my-key")
   {:error,
-   [
-     {{'HTTP/1.1', 404, 'Not Found'},
-      [
-        ...
-      ], []},
-     "Get request uri: [http:///v1/kv/my-key?keys=true]"
+   [{{'HTTP/1.1', 404, 'Not Found'}, [...], []},
+     "Get request uri: [http:///v1/kv/my-key?]"
    ]}
   ```
   """
@@ -51,7 +47,7 @@ defmodule MeshxConsul.Service.Endpoint do
   @doc """
   Returns `GET` request response at `path` API endpoint address.
   """
-  @spec get(path :: String.t(), query :: map()) :: {:ok, map()} | {:error, reason :: term()}
+  @spec get(path :: String.t(), query :: map()) :: {:ok, response :: term()} | {:error, reason :: term()}
   def get(path, query \\ %{}) do
     uri =
       C.uri()
@@ -62,10 +58,10 @@ defmodule MeshxConsul.Service.Endpoint do
 
     case :httpc.request(:get, {uri, C.httpc_headers()}, C.httpc_request_http_options(), C.httpc_request_options()) do
       {:ok, {{_http_version, 200, _reason_phrase}, _headers, body}} ->
-        if Map.get(query, :raw, false), do: body, else: Jason.decode(body)
+        if Map.get(query, :raw, false), do: {:ok, body}, else: Jason.decode(body)
 
       {:ok, {200, body}} ->
-        if Map.get(query, :raw, false), do: body, else: Jason.decode(body)
+        if Map.get(query, :raw, false), do: {:ok, body}, else: Jason.decode(body)
 
       {:ok, err} ->
         {:error, [err, "Get request uri: [#{uri}]"]}
