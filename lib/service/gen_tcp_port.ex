@@ -2,7 +2,16 @@ defmodule MeshxConsul.Service.GenTcpPort do
   @moduledoc """
   Generates TCP port numbers used by mesh service and upstream endpoints.
 
-  todo: Documentation will be provided at a later date.
+  Preparing mesh service and mesh upstream endpoints with `MeshxConsul.start/4` and `MeshxConsul.connect/3` requires creation of new TCP addresses used to connect user service providers and upstream clients with service mesh data plane.
+
+  Worker producing unused TCP ports is initiated with `:tcp_address` key in `config.exs`. Default config value:
+  ```elixir
+  # config.exs
+  config :meshx_consul,
+    tcp_address: [ip: {127, 0, 0, 1}, port_range: 1024..65535]
+  ```
+    * `:ip` - network interface address. It should be defined as tuple and in most situations it should point at loopback interface. TCP traffic passing here is unencrypted, which means that unauthorized users should never have access to this interface.
+    * `:port_range` - range in which available TCP ports will be allocated. Service ports are starting from lower range limit and are increasing, upstream ports are decreasing from upper range limit.
   """
 
   use GenServer
@@ -23,8 +32,23 @@ defmodule MeshxConsul.Service.GenTcpPort do
   @doc false
   def start_link(args), do: GenServer.start_link(__MODULE__, args, name: __MODULE__)
 
-  def new(range \\ :lo, server \\ __MODULE__, timeout \\ 5_000) when range in [:lo, :hi],
-    do: GenServer.call(server, {:new, range}, timeout)
+  @doc """
+  Generates new TCP port address.
+
+  `range` specifies which range should be used: `:lo` (lower) or `:hi` (higher).
+
+  `timeout` - if worker is unable find available port in time limited by `timeout`, function call fails and the caller exits.
+
+  ```elixir
+  iex(1)> MeshxConsul.Service.GenTcpPort.new
+  {:tcp, {127, 0, 0, 1}, 1024}
+  iex(2)> MeshxConsul.Service.GenTcpPort.new(:hi)
+  {:tcp, {127, 0, 0, 1}, 65535}
+  ```
+  """
+  @spec new(range :: :lo | :hi, timeout :: timeout()) :: {:tcp, ip :: tuple(), port :: pos_integer()}
+  def new(range \\ :lo, timeout \\ 5_000) when range in [:lo, :hi],
+    do: GenServer.call(__MODULE__, {:new, range}, timeout)
 
   @impl true
   def init(args) do
