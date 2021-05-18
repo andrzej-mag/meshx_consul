@@ -12,8 +12,8 @@ defmodule MeshxConsul.Application do
 
         children = [
           MeshxConsul.Dummy,
-          MeshxConsul.Proxy,
-          MeshxConsul.Ttl,
+          MeshxConsul.Proxy.Supervisor,
+          MeshxConsul.Ttl.Supervisor,
           {MeshxConsul.Service.GenTcpPort, C.tcp_address()}
         ]
 
