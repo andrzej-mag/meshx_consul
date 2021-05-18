@@ -40,61 +40,29 @@ defmodule MeshxConsul.Ttl do
   ```
   """
 
-  use DynamicSupervisor
-
-  @worker_mod MeshxConsul.Ttl.Worker
-
-  @doc false
-  def start_link(init_arg), do: DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  alias MeshxConsul.Ttl.{Supervisor, Worker}
 
   @doc """
   Starts TTL check worker for `service_id` service using `ttl_opts`.
   """
   @spec start(service_id :: atom() | String.t(), ttl_opts :: map()) :: DynamicSupervisor.on_start_child() | {:ok, nil}
-  def start(_service_id, ttl_opts) when is_nil(ttl_opts), do: {:ok, nil}
-  # FIXME:
-  # def start(_service_id, ttl_opts) when is_nil(ttl_opts), do: :ignore
-
-  def start(service_id, ttl_opts) do
-    id = id(service_id)
-    spec = Supervisor.child_spec({@worker_mod, [id, ttl_opts]}, [])
-
-    case DynamicSupervisor.start_child(__MODULE__, spec) do
-      {:ok, pid} -> {:ok, pid}
-      {:ok, pid, _info} -> {:ok, pid}
-      err -> err
-    end
-  end
+  defdelegate start(service_id, ttl_opts), to: Supervisor
 
   @doc """
   Stops TTL check worker for `service_id` service.
   """
   @spec stop(service_id :: atom() | String.t()) :: :ok | {:error, :not_found}
-  def stop(service_id) do
-    id = id(service_id)
-    @worker_mod.cleanup(id)
-
-    if is_pid(Process.whereis(__MODULE__)) do
-      w_id = Process.whereis(id)
-      if is_pid(w_id), do: DynamicSupervisor.terminate_child(__MODULE__, w_id), else: :ok
-    else
-      {:error, :not_found}
-    end
-  end
+  defdelegate stop(service_id), to: Supervisor
 
   @doc """
   Gets TTL check worker status for `service_id` service.
   """
   @spec get_status(service_id :: atom() | String.t()) :: String.t()
-  def get_status(service_id), do: @worker_mod.get_status(id(service_id))
+  def get_status(service_id), do: Worker.get_status(Supervisor.id(service_id))
 
   @doc """
   Sets TTL check worker `status` for `service_id` service.
   """
   @spec set_status(service_id :: atom() | String.t(), status :: String.t()) :: :ok
-  def set_status(service_id, status), do: @worker_mod.set_status(id(service_id), status)
-
-  @impl true
-  def init(_init_arg), do: DynamicSupervisor.init(strategy: :one_for_one)
-  defp id(service_id), do: Module.concat([__MODULE__, service_id])
+  def set_status(service_id, status), do: Worker.set_status(Supervisor.id(service_id), status)
 end
