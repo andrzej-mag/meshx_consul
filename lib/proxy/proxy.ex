@@ -22,47 +22,19 @@ defmodule MeshxConsul.Proxy do
   Proxy binary command must be able to communicate with Consul: agent instance address and ACL token must be provided. Configuration may be provided as shell environment variable defined by `:cli_env` key in `config.exs` or directly using proxy command. Environment variable is preferred when passing secrets.
   """
 
-  use DynamicSupervisor
-
-  @worker_mod MeshxConsul.Proxy.Worker
-
-  @doc false
-  def start_link(init_arg), do: DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
+  alias MeshxConsul.Proxy.{Supervisor, Worker}
 
   @doc """
   Starts long-running proxy binary `cmd` for `service_id` service.
   """
   @spec start(service_id :: atom() | String.t(), cmd :: [String.t()]) :: DynamicSupervisor.on_start_child() | {:ok, nil}
-  def start(_service_id, cmd) when is_nil(cmd), do: {:ok, nil}
-  # FIXME:
-  # def start(_service_id, cmd) when is_nil(cmd), do: :ignore
-
-  def start(service_id, cmd) do
-    id = id(service_id)
-    spec = Supervisor.child_spec({@worker_mod, [service_id, id, cmd]}, [])
-
-    case DynamicSupervisor.start_child(__MODULE__, spec) do
-      {:ok, pid} -> {:ok, pid}
-      {:ok, pid, _info} -> {:ok, pid}
-      err -> err
-    end
-  end
+  defdelegate start(service_id, cmd), to: Supervisor
 
   @doc """
   Stops `service_id` service proxy.
   """
   @spec stop(service_id :: atom() | String.t()) :: :ok | {:error, :not_found}
-  def stop(service_id) do
-    id = id(service_id)
-    @worker_mod.cleanup(id)
-
-    if is_pid(Process.whereis(__MODULE__)) do
-      w_id = Process.whereis(id)
-      if is_pid(w_id), do: DynamicSupervisor.terminate_child(__MODULE__, w_id), else: :ok
-    else
-      {:error, :not_found}
-    end
-  end
+  defdelegate stop(service_id), to: Supervisor
 
   @doc """
   Restarts proxy binary for `service_id` service.
@@ -74,7 +46,7 @@ defmodule MeshxConsul.Proxy do
   ```
   """
   @spec restart(service_id :: atom() | String.t()) :: :ok
-  def restart(service_id), do: @worker_mod.restart(id(service_id))
+  def restart(service_id), do: Worker.restart(Supervisor.id(service_id))
 
   @doc """
   Returns info about `service_id` service proxy worker.
@@ -97,9 +69,5 @@ defmodule MeshxConsul.Proxy do
   ```
   """
   @spec info(service_id :: atom() | String.t()) :: %{cmd: String.t(), restarts: non_neg_integer()}
-  def info(service_id), do: @worker_mod.info(id(service_id))
-
-  @impl true
-  def init(_init_arg), do: DynamicSupervisor.init(strategy: :one_for_one)
-  defp id(service_id), do: Module.concat([__MODULE__, service_id])
+  def info(service_id), do: Worker.info(Supervisor.id(service_id))
 end
