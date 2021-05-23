@@ -28,7 +28,7 @@ Add `:meshx_consul` to application dependencies:
 ```elixir
 # mix.exs
 def deps do
-  [{:meshx_consul, "~> 0.1.0-dev", github: "andrzej-mag/meshx_consul"}]
+  [{:meshx_consul, "~> 0.1.0"}]
 end
 ```
 
