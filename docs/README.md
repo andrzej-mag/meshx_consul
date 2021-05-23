@@ -1,4 +1,6 @@
 # MeshxConsul
+[![Hex Version](https://img.shields.io/hexpm/v/meshx_consul)](https://hex.pm/packages/meshx_consul)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen)](https://hexdocs.pm/meshx_consul)
 
 <!-- MDOC !-->
 Consul service mesh adapter.
@@ -14,9 +16,9 @@ Features:
   * management of long running proxy binary commands used by service mesh data plane,
   * automatic TCP address generation for mesh service and upstream endpoints.
 
-`MeshxConsul` primary purpose is to be used by other `Meshx` packages: `MeshxRpc` and `MeshxNode`. Package can also be used with any other user client/server application running on top of TCP protocol. UDP is not supported.
+`MeshxConsul` primary purpose is to be used with other `Meshx` packages: `MeshxRpc` and `MeshxNode`. Package can also be used with any other user client/server application running on top of TCP protocol. UDP is not supported.
 
-`MeshxConsul` using service mesh software (Consul) backed up by proxy application (eg. Envoy) will enhance user application with features characteristic to mesh environment, especially: mTLS traffic encryption, service ACLs, proxy traffic management features, possibly load balancing and high availability and others. Please refer to [Consul documentation](https://www.consul.io/docs) for additional details.
+`MeshxConsul` using service mesh software (Consul) backed up by proxy application (e.g. Envoy) will enhance user application with features characteristic to mesh environment, especially: mTLS traffic encryption, service ACLs, proxy traffic management features, possibly load balancing and high availability and others. Please refer to [Consul documentation](https://www.consul.io/docs) for additional details.
 
 ## Requirements
 `MeshxConsul` requires access to Consul agent ([installation instructions](https://www.consul.io/docs/install)). Additionally proxy application supported by Consul to run service mesh data plane is needed. Mainstream proxies supported by Consul: Consul built-in [Connect Proxy](https://www.consul.io/docs/connect/proxies/built-in), [Envoy Proxy](https://www.envoyproxy.io/), [HAProxy](https://github.com/haproxytech/haproxy-consul-connect).
@@ -80,10 +82,9 @@ Using single `MeshxConsul.start/3` command, `"service1-h11"` was registered with
 
 In next step, user should start service provider and connect it to mesh service endpoint established at `127.0.0.1:1024`. Service could be consumed, usually on another node, by using `MeshxConsul.connect/3` with attached user upstream client application. As we do not intend to run any service providers here, we stop `"service1-h11"` with MeshxConsul.stop/1 to perform clean-up: deregister Consul service and stop all auxiliary workers started earlier with `MeshxConsul.start/3`, including sidecar proxy.
 
-`Meshx` is shipped with `MeshxRpc` package optimized for providing RPC services using mesh endpoints managed by `MeshxConsul`. `MeshxRpc` [documentation](https://github.com/andrzej-mag/meshx_rpc/#example-2-service-mesh-using-meshxconsul) provides example showing how to start RPC service connected to endpoint address prepared by `MeshxConsul.start/3` and later connect an upstream client to this service.
+`Meshx` is shipped with `MeshxRpc` package optimized for providing RPC services using mesh endpoints managed by `MeshxConsul`. `MeshxRpc` documentation provides [example](https://github.com/andrzej-mag/meshx_rpc/#example-2-service-mesh-using-meshxconsul) showing how to start RPC service connected to endpoint address prepared by `MeshxConsul.start/3` and later connect an upstream client to this service.
 
 Another `Meshx` package leveraging `MeshxConsul` functionality is `MeshxNode`. `MeshxNode` is used to build distributed Elixir/Erlang nodes connected over (mTLS encrypted) service mesh data plane. Please consult `MeshxNode` [documentation](https://github.com/andrzej-mag/meshx_node#usage) for further details.
 
 <!-- MDOC !-->
-
-Next section on hexdocs.pm: [Configuration options].
+Next section on hexdocs.pm: [Configuration options](https://hexdocs.pm/meshx_consul/MeshxConsul.html#module-configuration-options).
