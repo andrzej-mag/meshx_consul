@@ -1,5 +1,5 @@
 defmodule MustacheTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias MeshxConsul.Service.Mustache
 
